@@ -1,0 +1,59 @@
+--- a/ACNextGen.lua
++++ b/ACNextGen.lua
+@@ -269,6 +269,7 @@
+     { name = "vehicle_condition",         enabled = true,  critical = false, diagnostic = false },
+ 
+     { name = "physics",                   enabled = true,  critical = false, diagnostic = false },
++    { name = "physics_worker_bridge",    enabled = true,  critical = false, diagnostic = true  },
+     { name = "wheel_audit",               enabled = false, critical = false, diagnostic = true  },
+ }
+ 
+@@ -326,11 +327,13 @@
+     impact_state = 30,
+     vehicle_condition = 10,
+     physics = 30,
++    physics_worker_bridge = 60,
+     wheel_audit = 2,
+ }
+ 
+ local modules = {}
+ local observerModule = nil
++local physicsWorkerBridgeModule = nil
+ 
+ local profile = {
+     worstEverName = "none",
+@@ -420,6 +423,7 @@
+ local function loadModules()
+     modules = {}
+     observerModule = nil
++    physicsWorkerBridgeModule = nil
+ 
+     runtime.loadedCount = 0
+     runtime.enabledCount = 0
+@@ -473,6 +477,9 @@
+                 if entry.name == "observer" then
+                     observerModule = entry.module
+                 end
++                if entry.name == "physics_worker_bridge" then
++                    physicsWorkerBridgeModule = entry.module
++                end
+ 
+                 callInit(entry)
+             else
+@@ -752,6 +759,16 @@
+     else
+         drawFallbackUI()
+     end
++
++    if physicsWorkerBridgeModule
++    and type(physicsWorkerBridgeModule.drawUI) == "function" then
++        local ok, err = pcall(physicsWorkerBridgeModule.drawUI, runtime, modules)
++        if not ok then
++            setRuntimeError("physics_worker_bridge.drawUI", err)
++            ui.text("CSP Physics Worker bridge UI error")
++            ui.text(shortError(err))
++        end
++    end
+ end
+ 
+ --============================================================
